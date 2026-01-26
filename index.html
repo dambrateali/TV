@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Painel Power BI Rotativo</title>
+    <meta charset="UTF-8">
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        background: #000;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="powerbi-frame"></iframe>
+
+    <script>
+      const pages = [
+"https://app.fabric.microsoft.com/reportEmbed?reportId=ed0f8299-4e0b-44bd-887e-6c4c625d5a25&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill",
+    "https://app.fabric.microsoft.com/reportEmbed?reportId=ed0f8299-4e0b-44bd-887e-6c4c625d5a25&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
+	
+      ];
+
+      let index = 0;
+
+      function rotatePage() {
+        document.getElementById("powerbi-frame").src = pages[index];
+        index = (index + 1) % pages.length;
+      }
+
+      // Primeira página
+      rotatePage();
+
+      // Troca de página a cada 3 minutos (180000 ms)
+      setInterval(() => {
+        rotatePage();
+      }, 180000); // Atualizado para 3 minutos (180.000 ms)
+    </script>
+  </body>
+</html>
