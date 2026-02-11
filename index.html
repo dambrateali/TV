@@ -1,47 +1,56 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Painel Power BI Rotativo</title>
-    <meta charset="UTF-8">
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        height: 100%;
-        background: #000;
-      }
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-    </style>
-  </head>
-  <body>
-    <iframe id="powerbi-frame"></iframe>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel Power BI Rotativo</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .msg { opacity: .85; padding: 24px; text-align: center; }
+    .small { opacity: .7; font-size: 14px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <div>Carregando relatório…</div>
+    <div class="small">Se pedir login, entre uma vez e ele segue alternando.</div>
+  </div>
 
-    <script>
-      const pages = [
-"https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill",
-"https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
-	
-      ];
+  <script>
+    const pages = [
+      "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill",
+      "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
+    ];
 
-      let index = 0;
+    // Troca a cada 5 minutos (ajusta se quiser)
+    const ROTATE_MS = 5 * 60 * 1000;
 
-      function rotatePage() {
-        document.getElementById("powerbi-frame").src = pages[index];
-        index = (index + 1) % pages.length;
-      }
+    // Índice persistente pra continuar alternando mesmo depois de recarregar
+    const KEY = "tv_rotate_idx";
+    let idx = parseInt(localStorage.getItem(KEY) || "0", 10);
+    if (Number.isNaN(idx)) idx = 0;
 
-      // Primeira página
-      rotatePage();
+    // Define próximo índice para a próxima rodada
+    localStorage.setItem(KEY, String((idx + 1) % pages.length));
 
-      // Troca de página a cada 3 minutos (180000 ms)
-      setInterval(() => {
-        rotatePage();
-      }, 180000); // Atualizado para 3 minutos (180.000 ms)
-    </script>
-  </body>
+    // Agenda: daqui a ROTATE_MS volta pro GitHub Pages (rotator) e troca
+    setTimeout(() => {
+      // volta pro próprio rotator e força refresh (pra pegar o próximo índice)
+      const base = window.location.origin + window.location.pathname;
+      window.location.href = base + "?t=" + Date.now();
+    }, ROTATE_MS);
+
+    // Abre o relatório como página principal (TOP-LEVEL), não iframe
+    window.location.replace(pages[idx]);
+  </script>
+</body>
 </html>
