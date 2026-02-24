@@ -11,19 +11,42 @@
       background: #000;
       color: #fff;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    #frame {
+      width: 100vw;
+      height: 100vh;
+      border: 0;
+      display: block;
+      background: #000;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: #000;
+      z-index: 10;
+      pointer-events: none;
     }
     .msg { opacity: .85; padding: 24px; text-align: center; }
     .small { opacity: .7; font-size: 14px; margin-top: 8px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="msg">
-    <div>Carregando relatório…</div>
-    <div class="small">Se pedir login, entre uma vez e ele segue alternando.</div>
+  <div id="overlay" class="overlay">
+    <div class="msg">
+      <div>Carregando relatório…</div>
+      <div class="small">Se pedir login, entre uma vez e ele segue alternando.</div>
+    </div>
   </div>
+
+  <iframe
+    id="frame"
+    referrerpolicy="no-referrer-when-downgrade"
+    allow="fullscreen"
+  ></iframe>
 
   <script>
     const pages = [
@@ -31,26 +54,39 @@
       "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
     ];
 
-    // Troca a cada 5 minutos (ajusta se quiser)
     const ROTATE_MS = 5 * 60 * 1000;
 
-    // Índice persistente pra continuar alternando mesmo depois de recarregar
-    const KEY = "tv_rotate_idx";
+    const KEY = "tv_rotate_idx_v2";
     let idx = parseInt(localStorage.getItem(KEY) || "0", 10);
-    if (Number.isNaN(idx)) idx = 0;
+    if (!Number.isFinite(idx)) idx = 0;
+    idx = idx % pages.length;
 
-    // Define próximo índice para a próxima rodada
-    localStorage.setItem(KEY, String((idx + 1) % pages.length));
+    const frame = document.getElementById("frame");
+    const overlay = document.getElementById("overlay");
 
-    // Agenda: daqui a ROTATE_MS volta pro GitHub Pages (rotator) e troca
-    setTimeout(() => {
-      // volta pro próprio rotator e força refresh (pra pegar o próximo índice)
-      const base = window.location.origin + window.location.pathname;
-      window.location.href = base + "?t=" + Date.now();
+    function showOverlay() { overlay.classList.remove("hidden"); }
+    function hideOverlay() { overlay.classList.add("hidden"); }
+
+    function loadReport(i) {
+      showOverlay();
+      frame.src = pages[i] + (pages[i].includes("?") ? "&" : "?") + "ts=" + Date.now();
+      localStorage.setItem(KEY, String(i));
+    }
+
+    // quando o iframe terminar de carregar, esconde o "Carregando…"
+    frame.addEventListener("load", () => {
+      // pequeno delay pra evitar “piscar” em carregamentos muito rápidos
+      setTimeout(hideOverlay, 500);
+    });
+
+    // carrega o primeiro
+    loadReport(idx);
+
+    // alterna a cada 5 minutos
+    setInterval(() => {
+      idx = (idx + 1) % pages.length;
+      loadReport(idx);
     }, ROTATE_MS);
-
-    // Abre o relatório como página principal (TOP-LEVEL), não iframe
-    window.location.replace(pages[idx]);
   </script>
 </body>
 </html>
