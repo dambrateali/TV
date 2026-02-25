@@ -8,36 +8,9 @@
   <style>
     html, body { margin:0; height:100%; background:#000; }
     #frame { width:100vw; height:100vh; border:0; display:block; background:#000; }
-
-    #hud{
-      position:fixed; left:14px; bottom:14px;
-      z-index:20;
-      color:#fff;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      font-size:13px;
-      background:rgba(0,0,0,.45);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:10px;
-      padding:8px 10px;
-    }
-
-    .overlay{
-      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-      background:#000; color:#fff; z-index:10; pointer-events:none;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    }
-    .hidden{ display:none; }
   </style>
 </head>
 <body>
-
-  <div id="overlay" class="overlay">
-    <div>Carregando relatório…</div>
-  </div>
-
-  <div id="hud">
-    Troca em: <b id="hudCountdown">--:--</b>
-  </div>
 
   <iframe
     id="frame"
@@ -53,17 +26,10 @@
 
     const ROTATE_MS = 5 * 60 * 1000;
     const frame = document.getElementById("frame");
-    const hud = document.getElementById("hudCountdown");
-    const overlay = document.getElementById("overlay");
 
     let idx = 0;
     let next = Date.now() + ROTATE_MS;
     let canRotate = false;
-
-    function fmt(ms){
-      const s = Math.max(0, Math.floor(ms/1000));
-      return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
-    }
 
     function isLoginUrl(url){
       if (!url) return true;
@@ -75,9 +41,7 @@
     }
 
     function loadReport(i){
-      overlay.classList.remove("hidden");
       canRotate = false;
-
       const url = pages[i] + "&tvts=" + Date.now();
       frame.src = url;
     }
@@ -86,20 +50,18 @@
       let src = "";
       try { src = frame.contentWindow.location.href; } catch(e){}
 
+      // só libera rotação quando não estiver em login
       if (!isLoginUrl(src)) {
-        // relatório carregado de verdade
         canRotate = true;
         next = Date.now() + ROTATE_MS;
-        overlay.classList.add("hidden");
       }
     });
 
     // inicial
     loadReport(idx);
 
+    // tick simples (sem texto na tela)
     setInterval(() => {
-      hud.textContent = fmt(next - Date.now());
-
       if (canRotate && Date.now() >= next) {
         idx = (idx + 1) % pages.length;
         loadReport(idx);
