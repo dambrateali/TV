@@ -55,17 +55,16 @@
 
   <iframe
     id="frame"
-    allow="fullscreen"
-    referrerpolicy="no-referrer-when-downgrade"
+    allow="fullscreen; clipboard-read; clipboard-write"
+    referrerpolicy="origin-when-cross-origin"
   ></iframe>
 
   <script>
     /**
      * ✅ CACHE KILLER (TV):
      * força 1 recarregamento com query param novo 1x por dia.
-     * Assim você não precisa ficar mudando link manualmente.
      */
-    const DAY_KEY = "tv_daily_bust_v1";
+    const DAY_KEY = "tv_daily_bust_v2";
     const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
     if (localStorage.getItem(DAY_KEY) !== today) {
       localStorage.setItem(DAY_KEY, today);
@@ -75,8 +74,8 @@
     }
 
     const pages = [
-      "https://app.fabric.microsoft.com/reportEmbed?reportId=7fe507ac-7f9c-4ebb-ba32-a57788c91279&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill",
-      "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
+      "https://app.fabric.microsoft.com/reportEmbed?reportId=7fe507ac-7f9c-4ebb-ba32-a57788c91279&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill&enablePersistentCookie=true",
+      "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill&enablePersistentCookie=true"
     ];
 
     const ROTATE_MS = 5 * 60 * 1000;
@@ -109,15 +108,17 @@
 
     function loadReport(i){
       showOverlay();
-      // cache-buster pra forçar troca real no iframe
+      // cache-buster pra forçar troca real no iframe (TV gosta disso)
       const url = pages[i] + (pages[i].includes("?") ? "&" : "?") + "tvts=" + Date.now();
       frame.src = url;
       setIdx(i);
     }
 
+    // start
     let idx = getIdx();
     loadReport(idx);
 
+    // agenda por relógio (robusto em TV)
     let next = getNext();
     const now0 = Date.now();
     if (next < now0 + 1000) {
@@ -132,7 +133,6 @@
       return `${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
     }
 
-    // tick 1s: atualiza HUD + troca quando chegar a hora
     setInterval(() => {
       const now = Date.now();
       hudCountdown.textContent = fmtMs(next - now);
@@ -144,6 +144,20 @@
         setNext(next);
       }
     }, 1000);
+
+    // Se a TV "dorme" e volta, troca se já passou do horário
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        const now = Date.now();
+        next = getNext();
+        if (now >= next) {
+          idx = (getIdx() + 1) % pages.length;
+          loadReport(idx);
+          next = now + ROTATE_MS;
+          setNext(next);
+        }
+      }
+    });
   </script>
 </body>
 </html>
