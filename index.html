@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel Power BI Rotativo</title>
 
-  <!-- ajuda a reduzir cache em alguns navegadores/TVs -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -14,21 +13,21 @@
     html, body { margin:0; height:100%; background:#000; }
     #frame { width:100vw; height:100vh; border:0; display:block; background:#000; }
 
-    /* HUD (info no canto) */
+    /* HUD minimal */
     #hud{
       position:fixed; left:14px; bottom:14px;
       z-index:20;
       color:#fff;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      font-size:14px;
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.18);
-      border-radius:12px;
-      padding:10px 12px;
-      line-height:1.35;
+      font-size:13px;
+      background:rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:10px;
+      padding:8px 10px;
+      line-height:1.2;
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
-      min-width: 230px;
+      min-width: 140px;
     }
     #hud b { font-weight: 700; }
 
@@ -51,10 +50,7 @@
   </div>
 
   <div id="hud">
-    <div>Relatório: <b id="hudReport">-</b></div>
-    <div>Troca em: <b id="hudCountdown">-</b></div>
-    <div>Agora: <b id="hudNow">-</b></div>
-    <div style="opacity:.75">Versão: <b id="hudVer">-</b></div>
+    Troca em: <b id="hudCountdown">--:--</b>
   </div>
 
   <iframe
@@ -76,15 +72,7 @@
 
     const frame = document.getElementById("frame");
     const overlay = document.getElementById("overlay");
-
-    const hudReport = document.getElementById("hudReport");
     const hudCountdown = document.getElementById("hudCountdown");
-    const hudNow = document.getElementById("hudNow");
-    const hudVer = document.getElementById("hudVer");
-
-    // mostra a versão (query param v=)
-    const params = new URLSearchParams(location.search);
-    hudVer.textContent = params.get("v") || "sem-v";
 
     function showOverlay(){ overlay.classList.remove("hidden"); }
     function hideOverlay(){ overlay.classList.add("hidden"); }
@@ -107,13 +95,11 @@
 
     function loadReport(i){
       showOverlay();
-      hudReport.textContent = `${i + 1}/${pages.length}`;
       const url = pages[i] + (pages[i].includes("?") ? "&" : "?") + "tvts=" + Date.now();
       frame.src = url;
       setIdx(i);
     }
 
-    // start
     let idx = getIdx();
     loadReport(idx);
 
@@ -131,18 +117,8 @@
       return `${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
     }
 
-    // tick 1s: atualiza HUD + troca quando chega a hora
     setInterval(() => {
       const now = Date.now();
-
-      // relógio na tela
-      const d = new Date(now);
-      const hh = String(d.getHours()).padStart(2,"0");
-      const mm = String(d.getMinutes()).padStart(2,"0");
-      const ss = String(d.getSeconds()).padStart(2,"0");
-      hudNow.textContent = `${hh}:${mm}:${ss}`;
-
-      // contagem regressiva
       hudCountdown.textContent = fmtMs(next - now);
 
       if (now >= next) {
