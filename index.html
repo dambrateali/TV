@@ -13,7 +13,7 @@
     html, body { margin:0; height:100%; background:#000; }
     #frame { width:100vw; height:100vh; border:0; display:block; background:#000; }
 
-    /* HUD minimal */
+    /* HUD minimal: só "Troca em" */
     #hud{
       position:fixed; left:14px; bottom:14px;
       z-index:20;
@@ -60,6 +60,20 @@
   ></iframe>
 
   <script>
+    /**
+     * ✅ CACHE KILLER (TV):
+     * força 1 recarregamento com query param novo 1x por dia.
+     * Assim você não precisa ficar mudando link manualmente.
+     */
+    const DAY_KEY = "tv_daily_bust_v1";
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    if (localStorage.getItem(DAY_KEY) !== today) {
+      localStorage.setItem(DAY_KEY, today);
+      const url = new URL(window.location.href);
+      url.searchParams.set("v", String(Date.now()));
+      window.location.replace(url.toString());
+    }
+
     const pages = [
       "https://app.fabric.microsoft.com/reportEmbed?reportId=7fe507ac-7f9c-4ebb-ba32-a57788c91279&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill",
       "https://app.fabric.microsoft.com/reportEmbed?reportId=20adb7ad-4c4e-45ac-a497-db45c09fc555&autoAuth=true&ctid=832b0736-d169-4301-a7d7-a8cc17c4a68f&filterPaneEnabled=false&navContentPaneEnabled=false&aspectRatio=Fill"
@@ -95,6 +109,7 @@
 
     function loadReport(i){
       showOverlay();
+      // cache-buster pra forçar troca real no iframe
       const url = pages[i] + (pages[i].includes("?") ? "&" : "?") + "tvts=" + Date.now();
       frame.src = url;
       setIdx(i);
@@ -117,6 +132,7 @@
       return `${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
     }
 
+    // tick 1s: atualiza HUD + troca quando chegar a hora
     setInterval(() => {
       const now = Date.now();
       hudCountdown.textContent = fmtMs(next - now);
